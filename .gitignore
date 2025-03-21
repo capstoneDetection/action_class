@@ -6,5 +6,6 @@
 /AI_Train/Dataset/Data/*
 /AI_Train/Dataset/Processed/*
 /AI_Train/Dataset/
+/AI_Train/FallDataset_mp4
 /AI_Train/FallDataset
-/AI_Train/NoFallDataset
+/AI_Train/NoFallDataset_mp4
