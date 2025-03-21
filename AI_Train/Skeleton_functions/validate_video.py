@@ -38,7 +38,7 @@ def validate_videos_in_folder(root_folder):
         for filename in filenames:
             if any(filename.lower().endswith(ext) for ext in video_extensions):
                 filepath = os.path.join(dirpath, filename)
-                # print(f"Validating: {filepath}")
+                print(f"Validating: {filepath}")
                 if validate_video(filepath):
                     # print(f"  - Valid")
                     pass
