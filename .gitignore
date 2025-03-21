@@ -1,3 +1,5 @@
 .DS_Store
-AI_Train/Dataset/
 **/.DS_Store
+
+/AI_Train/Dataset/Data/*
+/AI_Train/Dataset/Processed/*
