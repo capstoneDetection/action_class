@@ -7,33 +7,46 @@ def generate_nofall_clips(root_dir, output_dir, num_clips=1):
     """
     Generate MP4 clips of 30 frames from videos, taken only from before a fall occurs.
 
-    :param root_dir: Root directory of the dataset (e.g., "FallDataset")
-    :param output_dir: Directory to save the output clips (e.g., "NoFallClips")
-    :param num_clips: Number of 30-frame clips to generate per video (default=1)
+    Args:
+        root_dir (str): Root directory of the dataset (e.g., 'archive').
+        output_dir (str): Directory to save the output clips (e.g., 'processed/nofall/video').
+        num_clips (int): Number of 30-frame clips to generate per video (default=1).
+
+    The function traverses the dataset recursively, finds subfolders with 'Annotation_files' and 'Videos',
+    and saves clips directly in output_dir without subfolders.
     """
-    # Create output directory if it doesn’t exist
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
 
-    # Traverse each location folder in root_dir
-    for location in os.listdir(root_dir):
-        location_path = os.path.join(root_dir, location)
-        if os.path.isdir(location_path):
-            videos_path = os.path.join(location_path, "Videos")
-            annotations_path = os.path.join(location_path, "Annotation_files")
+    # Traverse the root directory to find folders with both 'Annotation_files' and 'Videos'
+    for root, dirs, files in os.walk(root_dir):
+        # Handle case sensitivity and common naming variations
+        annotation_dir_name = 'Annotation_files' if 'Annotation_files' in dirs else 'Annotations_files' if 'Annotations_files' in dirs else None
+        videos_dir_name = 'Videos' if 'Videos' in dirs else None
 
-            # Create corresponding output subfolder (same structure as input)
-            output_location_path = os.path.join(output_dir, location)
-            if not os.path.exists(output_location_path):
-                os.makedirs(output_location_path)
+        if annotation_dir_name and videos_dir_name:
+            annotation_folder = os.path.join(root, annotation_dir_name)
+            videos_folder = os.path.join(root, videos_dir_name)
+            location_name = os.path.basename(root)  # e.g., 'Coffee_room_01'
+
             try:
-                # Process each video file
-                for video_file in os.listdir(videos_path):
-                    if video_file.endswith(".avi"):
+                # Process each video file in the Videos folder
+                for video_file in os.listdir(videos_folder):
+                    if video_file.endswith('.avi'):
                         video_name = os.path.splitext(
-                            video_file)[0]  # e.g., "video (1)"
+                            video_file)[0]  # e.g., 'video (1)'
+                        try:
+                            # Extract video number, e.g., '1' from 'video (1)'
+                            video_number = video_name.split(
+                                ' (')[1].split(')')[0]
+                        except IndexError:
+                            print(
+                                f"Skipping invalid video file name: {video_file}")
+                            continue
+
+                        # Corresponding annotation file
                         annotation_file = os.path.join(
-                            annotations_path, video_name + ".txt")
+                            annotation_folder, f"{video_name}.txt")
 
                         # Skip if annotation file is missing
                         if not os.path.exists(annotation_file):
@@ -42,19 +55,19 @@ def generate_nofall_clips(root_dir, output_dir, num_clips=1):
                             continue
 
                         # Read start frame from annotation
-                        with open(annotation_file, 'r') as f:
-                            lines = f.readlines()
-                            if len(lines) < 1:
-                                print(
-                                    f"Skipping {video_file}: Invalid annotation file")
-                                continue
-                            try:
+                        try:
+                            with open(annotation_file, 'r', encoding='ISO-8859-1') as f:
+                                lines = f.readlines()
+                                if len(lines) < 1:
+                                    print(
+                                        f"Skipping {video_file}: Invalid annotation file")
+                                    continue
                                 # Start of fall
                                 start_frame = int(lines[0].strip())
-                            except ValueError:
-                                print(
-                                    f"Skipping {video_file}: Invalid frame number in annotation")
-                                continue
+                        except (ValueError, Exception) as e:
+                            print(
+                                f"Skipping {video_file}: Error reading annotation ({e})")
+                            continue
 
                         # Skip if fall starts before frame 30
                         if start_frame < 30:
@@ -62,8 +75,14 @@ def generate_nofall_clips(root_dir, output_dir, num_clips=1):
                                 f"Skipping {video_file}: Fall starts too early (frame {start_frame})")
                             continue
 
-                        video_path = os.path.join(videos_path, video_file)
+                        video_path = os.path.join(videos_folder, video_file)
                         cap = cv2.VideoCapture(video_path)
+
+                        # Check if video opened successfully
+                        if not cap.isOpened():
+                            print(
+                                f"Skipping {video_file}: Could not open video")
+                            continue
 
                         # Get video properties
                         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -75,6 +94,7 @@ def generate_nofall_clips(root_dir, output_dir, num_clips=1):
                         if total_frames < start_frame:
                             print(
                                 f"Skipping {video_file}: Not enough frames (total={total_frames}, start={start_frame})")
+                            cap.release()
                             continue
 
                         # Generate specified number of clips
@@ -83,16 +103,15 @@ def generate_nofall_clips(root_dir, output_dir, num_clips=1):
                             random_start = random.randint(0, start_frame - 30)
                             cap.set(cv2.CAP_PROP_POS_FRAMES, random_start)
 
-                            # Define output video file with the same base name plus a clip number
-                            output_video_name = f"{video_name}_nofall_clip{clip_num+1}.mp4"
+                            # Define output video file with unique name
+                            output_video_name = f"{location_name}_video_{video_number}_nofall_clip{clip_num+1}.mp4"
                             output_video_path = os.path.join(
-                                output_location_path, output_video_name)
-                            fourcc = cv2.VideoWriter_fourcc(
-                                *'mp4v')  # Use 'mp4v' codec
+                                output_dir, output_video_name)
+                            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
                             writer = cv2.VideoWriter(
                                 output_video_path, fourcc, fps, (width, height))
 
-                            # Write 30 frames to output (only from before the fall)
+                            # Write 30 frames to output
                             for _ in range(30):
                                 ret, frame = cap.read()
                                 if ret:
@@ -102,7 +121,18 @@ def generate_nofall_clips(root_dir, output_dir, num_clips=1):
                                         f"Warning: Could not read 30 frames from {video_file} for clip {clip_num+1}")
                                     break
                             writer.release()
+                            print(f"Saved clip: {output_video_path}")
 
                         cap.release()
+
             except Exception as e:
-                print(f"Error processing {location}: {e}")
+                print(f"Error processing {location_name}: {e}")
+
+
+# Example usage
+if __name__ == "__main__":
+    root_dir = "../archive"
+    output_dir = "../processed/nofall/video"
+    num_clips = 1
+    generate_nofall_clips(root_dir, output_dir, num_clips)
+    print("Processing complete!")
