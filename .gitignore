@@ -13,6 +13,7 @@
 /AI_Train/FallDataset_mp4
 /AI_Train/FallDataset
 /AI_Train/NoFallDataset_mp4
+/AI_Train/temp/FallDataset/
 
 # Files over 100 MB (Automatically added)
 AI_Train/FallDataset/Office/video (20).avi
@@ -34,3 +35,7 @@ AI_Train/FallDataset/Coffee_room_01/Videos/video (11).avi
 AI_Train/FallDataset/Coffee_room_01/Videos/video (47).avi
 AI_Train/FallDataset/Coffee_room_01/Videos/video (48).avi
 AI_Train/FallDataset/Coffee_room_01/Videos/video (43).avi
+/AI_Train/temp/FallDataset
+AI_Train/temp
+AI_Train/.DS_Store
+AI_Train/.DS_Store
