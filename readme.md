@@ -20,7 +20,7 @@ Designed as a baseline/demo for researchers and university students.
    and download the “Le2i Fall Dataset” (you’ll receive an `archive.zip`).
 
 2. **Place the ZIP**
-   Create a folder named **Put dataset zip here** at the project root and put `archive.zip` inside.
+   Put that zip file inside a folder named : **Put dataset zip here** at the project root
 
 3. **Generate Skeleton CSVs**
    Open and run `action_class/Make_dataset.ipynb`.
