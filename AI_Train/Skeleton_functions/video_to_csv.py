@@ -60,7 +60,7 @@ def skeleton_csv(video_path, output_csv_path, output_csv_name='skeleton_video.cs
         while True:
             success, image = cap.read()
             if not success:
-                print("모든 프레임 처리 완료, 총 프레임 수:", frame_idx)
+                # print("모든 프레임 처리 완료, 총 프레임 수:", frame_idx)
                 break
 
             image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -114,7 +114,7 @@ def skeleton_csv(video_path, output_csv_path, output_csv_name='skeleton_video.cs
         df = pd.DataFrame(csv_rows, columns=[
                           "frame", "landmark", "x", "y", "z", "accuracy"])
         df.to_csv(csv_full_path, index=False)
-        print("CSV 파일 저장 완료:", csv_full_path)
+        # print("CSV 파일 저장 완료:", csv_full_path)
         return df
 
     except Exception as e:
